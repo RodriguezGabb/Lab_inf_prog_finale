@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Risultati ricerca</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #577590;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    {% if result is not defined or result|length == 0 %}
+    <h1>Spiacente ma non risultano dati per la tua richiesta</h1>
+    {% elif result[0].item_type == 'error' %}
+        <h1>Errore</h1>
+        <div>
+            <p>Errore durante la ricerca ecco le specifiche del errore</p>
+            <p>{{result[0].properties}}</p>
+        </div>
+    {% else %}
+    <h1>Risultati</h1>
+    <div>
+        <p>ecco la lista dei {{result[0].item_type}} richiesti:</p>
+        <ul>
+            {% for item in result %}
+            <li>
+                {{item.properties[0].property_value}}
+            </li>
+            {% endfor%} 
+        </ul>
+    </div>
+    {% endif %}
+
+    <a href="/" class="back-btn">Torna alla home</a>
+</body>
+</html>
+

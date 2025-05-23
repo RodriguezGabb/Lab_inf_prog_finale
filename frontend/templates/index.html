@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Landingpage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #577590;
+        }
+        input[type="text"] {
+            width: 90%;
+            padding: 8px;
+            margin: 10px 0 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Richieste in linguagio naturale a database</h1>
+    <p>Inserire la richiesta e cliccare il bottone</p>
+    <input type="text" id="inputUtente" placeholder="Scrivere qui...">
+    <br>
+    <div class="button_container">
+        <!-- Reindirizza a /search/{richiesta}-->
+        <button onclick="search()">Search</button>     
+        <button onclick="schema_summary()">Schema summary</button>
+        <button class="button" type="button" onclick="add()">Add</button>
+        <!-- metodo POST -->
+        <form id="formPost" method="post" action="/add" >
+            <input type="hidden" id="inputPost" name="richiesta">            
+        </form>
+    </div>
+    </div>
+    <script>
+        function search() {
+            const input = document.getElementById('inputUtente').value;
+            if(input) window.location.href = `/search/${encodeURIComponent(input)}`;
+        }
+
+        function schema_summary(){
+            window.location.href = `/schema_summary`;
+        }
+
+        function add() {
+            const userInput = document.getElementById('inputUtente').value;
+            if (!userInput){
+                alert("Inserire una dataline prima di cliccare add!")
+            }
+            else{
+                const formInput = document.getElementById('inputPost');
+                formInput.value=userInput;
+                document.querySelector('form').submit();
+            }
+        }
+    </script>
+</body>
+</html>

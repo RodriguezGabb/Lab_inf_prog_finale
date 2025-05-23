@@ -1,0 +1,1 @@
+Primo post sul git, progetto base da tradurre in inglese e completare 

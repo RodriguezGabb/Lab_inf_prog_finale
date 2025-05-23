@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>schema summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #577590;
+        }
+        .tabelle {
+            display: flex;
+            gap: 20px; 
+            justify-content: flex-start; 
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .tabelle table {
+            border-collapse: collapse;
+            min-width: 120px;
+            background: #fff;
+            border: 1px solid #ccc;
+        }  
+        .tabelle th{
+            border: 1px solid #ccc; padding: 10px;
+        }
+        .tabelle td{
+            border: 1px solid #ccc; padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Schema summary:</h1>
+        <div class="tabelle">
+
+        <table class="table movies">
+            <tr>
+            <th>movies</th>
+            </tr>
+            {% for item in schema_summary %}    
+            <tr>
+                {% if 'movies' == item.table_name%}
+                    <td>
+                        {{item.table_column}}
+                    </td>   
+                {%endif%}
+            </tr>
+            {%endfor%}
+        </table>
+
+        <table class="table Registi">
+            <tr>
+            <th>Registi</th>
+            </tr>
+
+            {% for item in schema_summary %}    
+            <tr>
+                {% if 'Registi' == item.table_name%}
+                    <td>
+                        {{item.table_column}}
+                    </td>
+                {%endif%}
+            </tr>
+            {%endfor%}
+        </table>
+
+        <table class="table Piattaforme">
+            <tr>
+            <th>Piattaforme</th>
+            </tr>
+
+            {% for item in schema_summary %}    
+            <tr>
+                {% if 'Piattaforme' == item.table_name%}
+                    <td>
+                        {{item.table_column}}
+                    </td>
+                {%endif%}
+            </tr>
+            {%endfor%}
+        </table>
+    </div>
+    <a href="/" class="back-btn">Torna alla home</a>
+</body>
+</html>
+
