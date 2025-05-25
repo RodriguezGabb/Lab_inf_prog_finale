@@ -3,10 +3,10 @@ import os
 from add_request import add_from_row
 
 def init_tables():
-    #prendo il path del file "data.tsv"
+    #this finds the data.tsv path
     path_cartella=os.path.join(os.getcwd(), os.path.dirname(__file__))
     path=os.path.join(path_cartella, 'data.tsv')
-    #apertura del file e inserimento delle righe nelle varie tabelle di mariadb
+    #open file and insert data into tables
     with open(path, "r", encoding="utf8") as data:
         tsv_reader = csv.DictReader(data, delimiter="\t")
         for row in tsv_reader:

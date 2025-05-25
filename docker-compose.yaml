@@ -1,11 +1,11 @@
 
 services:
-  mariadb_esonero:
+  mariadb_esame:
     image: mariadb:11.7.2-ubi9
-    container_name: mariadb_esonero
+    container_name: mariadb_esame
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=esonero
+      - MYSQL_DATABASE=esame
     ports:
       - "3307:3306"
     volumes:
@@ -21,13 +21,13 @@ services:
     
   
   
-  server_esonero:
+  server_esame:
     build: ./backend
     ports: 
      - "8003:8003"
-    container_name: server_esonero
+    container_name: server_esame
     depends_on:
-      mariadb_esonero:
+      mariadb_esame:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"] #preso dalla documentazione di health check
@@ -37,13 +37,13 @@ services:
     networks:
       - mariadb_network
 
-  cilent_esonero:
+  cilent_esame:
     build: ./frontend
     ports:
       - "8001:8001"
-    container_name: cilent_esonero
+    container_name: cilent_esame
     depends_on:
-      server_esonero:
+      server_esame:
         condition: service_healthy
     networks:
       - mariadb_network

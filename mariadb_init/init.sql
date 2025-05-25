@@ -1,8 +1,8 @@
 --creazione del user e del database 
 CREATE USER IF NOT EXISTS 'film_user'@'localhost' IDENTIFIED BY 'filmpassword';
-CREATE DATABASE IF NOT EXISTS esonero;
-GRANT ALL PRIVILEGES ON esonero.* TO 'film_user'@'%' IDENTIFIED BY 'filmpassword';
-USE esonero;
+CREATE DATABASE IF NOT EXISTS esame;
+GRANT ALL PRIVILEGES ON esame.* TO 'film_user'@'%' IDENTIFIED BY 'filmpassword';
+USE esame;
 
 --creo prima perché è foreign key
 CREATE TABLE IF NOT EXISTS directors( 
