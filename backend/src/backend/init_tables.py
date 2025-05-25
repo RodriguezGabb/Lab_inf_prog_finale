@@ -1,6 +1,6 @@
 import csv
 import os
-from src.backend.add_request import add_from_row
+from add_request import add_from_row
 
 def init_tables():
     #prendo il path del file "data.tsv"
@@ -12,5 +12,5 @@ def init_tables():
         for row in tsv_reader:
             out=add_from_row(row)
             #print(out)#questa print serve solo a vedere se si inizializza in modo corretto le tabelle
-if __name__=="__main__":
+if __name__=="__main__":#DEBUG
     init_tables()

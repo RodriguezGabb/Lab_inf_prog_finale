@@ -5,31 +5,39 @@ GRANT ALL PRIVILEGES ON esonero.* TO 'film_user'@'%' IDENTIFIED BY 'filmpassword
 USE esonero;
 
 --creo prima perché è foreign key
-CREATE TABLE IF NOT EXISTS Registi( 
-    regista VARCHAR(255) NOT NULL,
-    eta INT NOT NULL,
-    PRIMARY KEY (regista)
+CREATE TABLE IF NOT EXISTS directors( 
+    director VARCHAR(255) NOT NULL,
+    age INT NOT NULL,
+    PRIMARY KEY (director)
 );
 
 CREATE TABLE IF NOT EXISTS movies(
-    titolo VARCHAR(255) NOT NULL,
-    anno INT NOT NULL,
-    regista VARCHAR(255) NOT NULL,
-    genere VARCHAR(255) NOT NULL,
-    PRIMARY KEY (titolo),
-    FOREIGN KEY (regista) REFERENCES Registi(regista),
-    CONSTRAINT UC_film UNIQUE (titolo, anno, regista),/*non può uscire lo stesso film nello stesso anno dallo stesso regista*/
-    CONSTRAINT UC_film2 UNIQUE (titolo, anno)/*non può uscire lo stesso film nello stesso anno*/
+    title VARCHAR(255) NOT NULL,
+    release_year INT NOT NULL,
+    director VARCHAR(255) NOT NULL,
+    genre VARCHAR(255) NOT NULL,
+    PRIMARY KEY (title),
+    FOREIGN KEY (director) REFERENCES directors(director),
+    CONSTRAINT UC_film UNIQUE (title, release_year, director),/*non può uscire lo stesso film nello stesso anno dallo stesso regista*/
+    CONSTRAINT UC_film2 UNIQUE (title, release_year)/*non può uscire lo stesso film nello stesso anno*/
 );
 
 
 
-CREATE TABLE IF NOT EXISTS Piattaforme(
-    id_piattaforma INT AUTO_INCREMENT,
-    titolo VARCHAR(255) NOT NULL,
-    piattaforma_1 VARCHAR(255),
-    piattaforma_2 VARCHAR(255),
-    PRIMARY KEY(id_piattaforma),
-    FOREIGN KEY (titolo) REFERENCES movies(titolo),
-    CONSTRAINT UC_piattafroma UNIQUE (titolo)
-);  
+CREATE TABLE IF NOT EXISTS platform(
+    platform_name VARCHAR(255) PRIMARY KEY
+);
+
+
+CREATE TABLE IF NOT EXISTS relation_platform_film(
+    id_relation INT AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    platform1 VARCHAR(255) ,
+    platform2 VARCHAR(255) ,
+
+    FOREIGN KEY (title) REFERENCES movies(title),
+    FOREIGN KEY (platform1) REFERENCES platform(platform_name),
+    FOREIGN KEY (platform2) REFERENCES platform(platform_name),
+    PRIMARY KEY (id_relation),
+    CONSTRAINT UC_platform UNIQUE (title)/*this is to have a single entry for each film*/
+); 
