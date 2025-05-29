@@ -38,20 +38,29 @@
     <input type="text" id="inputUtente" placeholder="Scrivere qui...">
     <br>
     <div class="button_container">
-        <!-- Reindirizza a /search/{richiesta}-->
-        <button onclick="search()">Search</button>     
+        <button class="button" type="button" onclick="search()">Search</button>   
         <button onclick="schema_summary()">Schema summary</button>
         <button class="button" type="button" onclick="add()">Add</button>
         <!-- metodo POST -->
-        <form id="formPost" method="post" action="/add" >
-            <input type="hidden" id="inputPost" name="richiesta">            
+        <form id="formPostAdd" method="post" action="/add"  >
+            <input type="hidden" id="inputPostAdd" name="data_line">            
+        </form>
+        <form id="formPostSearch" method="post" action="/search" >
+            <input type="hidden" id="inputPostSearch" name="data_line">            
         </form>
     </div>
     </div>
     <script>
         function search() {
-            const input = document.getElementById('inputUtente').value;
-            if(input) window.location.href = `/search/${encodeURIComponent(input)}`;
+            const userInput = document.getElementById('inputUtente').value;
+            if (!userInput){
+                alert("Inserire una dataline prima di cliccare search!");
+            }
+            else{
+                const formInput = document.getElementById('inputPostSearch');
+                formInput.value=userInput;
+                document.getElementById('formPostSearch').submit();
+            }
         }
 
         function schema_summary(){
@@ -64,9 +73,9 @@
                 alert("Inserire una dataline prima di cliccare add!")
             }
             else{
-                const formInput = document.getElementById('inputPost');
+                const formInput = document.getElementById('inputPostAdd');
                 formInput.value=userInput;
-                document.querySelector('form').submit();
+                document.getElementById('formPostAdd').submit();
             }
         }
     </script>

@@ -9,7 +9,7 @@ path_cartella_corrente = os.path.dirname(os.path.abspath(__file__))
 path_cartella_src=os.path.dirname(os.path.dirname(path_cartella_corrente))
 path=os.path.join(path_cartella_src, 'templates')
 templates=Jinja2Templates(directory=path)
-SERVICE_SERVER_URL="http://server_esonero:8003"
+SERVICE_SERVER_URL="http://server_esame:8003"
 
 def get_response(url:str)->requests.models.Response:
     try:
@@ -30,10 +30,11 @@ def schema_summary(request:Request):
      schema=get_response("/schema_summary")
      return templates.TemplateResponse("schema_summary.html",{"request":request, "schema_summary":schema})
 
-@app.get("/search/{query}")
-def search(request:Request, query):
+@app.post("/search")
+async def search(request:Request, data_line:str =Form(default=...)):
     try:
-        response=requests.get(f"{SERVICE_SERVER_URL}/search/{query}")
+        payload={"data_line":data_line}
+        response=requests.post(f"{SERVICE_SERVER_URL}/search", json=payload)
         response.raise_for_status()
         messaggio=response.json()
     except requests.RequestException as e:
@@ -46,20 +47,17 @@ def search(request:Request, query):
             # in caso l'errore sia una list
                 messaggio = "; ".join(str(item) for item in error["detail"])
         except Exception:
-            messaggio = f"Errore di comunicazione con l'API al link {SERVICE_SERVER_URL}/search/{query}\nErrore:{e}"
+            messaggio = f"Errore di comunicazione con l'API al link {SERVICE_SERVER_URL}/search \n con la domanda {data_line}\nErrore:{e}"
     
     if not isinstance(messaggio, list):
         messaggio=[{"item_type":"error", 'properties': messaggio}]#passo l'errore in modo tale che jinja2 possa leggerlo
     return templates.TemplateResponse("search.html",{"request":request, "result":messaggio})
 
-class AddItem(BaseModel):
-    name: str
-    value: int
 
 @app.post("/add")
-async def add(request:Request, richiesta:str =Form(default=...)):
+async def add(request:Request, data_line:str =Form(default=...)):
     try:
-        payload ={"data_line":richiesta}  
+        payload ={"data_line":data_line}  
         response=requests.post(f"{SERVICE_SERVER_URL}/add",json=payload)
         response.raise_for_status()
         result=response.json()
