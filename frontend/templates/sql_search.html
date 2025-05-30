@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>research result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #577590;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>The query was {{result.sql_validation}}!</h1>
+    {% if result.sql_validation != "valid"  %}
+    <p>So it wasn't executed</p>
+    {% else %}
+    <p>Here is the output</p>
+    <ul>
+            {% for item in result.results %}
+            <li>
+                {{item.properties[0].property_value}}
+            </li>
+            {% endfor%} 
+        </ul>
+    {% endif %}
+
+    <a href="/" class="back-btn">return to home</a>
+</body>
+</html>
+

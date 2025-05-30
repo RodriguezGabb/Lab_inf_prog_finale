@@ -1,42 +1,6 @@
-from itsdangerous import BadData
 import mariadb
 from typing import Any, List, Tuple
-
-# from src.backend.mariadb_manager import execute_query
-# from mariadb_manager import execute_query
-
-def connect() -> mariadb.Connection:
-    '''starts the connection with mariadb with user "film_user"'''
-    try:
-        conn = mariadb.connect(
-            host="localhost",
-            port=3307,
-            user="film_user",
-            password="filmpassword",
-            database="esame"
-        )
-    except mariadb.Error as e:
-        raise Exception(f"error in the connection with mariadb: {e}")
-    return conn
-
-def execute_query(query: str) -> List[Tuple]:
-    '''execute query, return the output'''
-    connection: mariadb.Connection = connect()
-    cursor : mariadb.Cursor=connection.cursor()
-    try:
-        cursor.execute(query)
-    except mariadb.Error as e:
-        raise Exception(f"Error in the execution of the following query:\n {query}\n the error message is:\n {e}")
-    try:
-        results: Any = cursor.fetchall()
-    except mariadb.Error as e:
-        raise Exception(f"Error in the return of the following query: {query}\n the error message is:\n:\n {e}")
-
-    connection.commit()
-    cursor.close()
-    connection.close()
-    return results
-
+from src.backend.mariadb_manager import execute_query
 def get_db_struct()->dict:
     '''retuns database structure for ai'''
     
@@ -48,8 +12,6 @@ def get_db_struct()->dict:
             WHERE table_schema = 'esame'
             ORDER BY table_name, ordinal_position;
         """)
-        print("## tables in database\n")
-        print(table_columns)
 
         # primary key
         tables_primry=execute_query("""
@@ -62,8 +24,6 @@ def get_db_struct()->dict:
             WHERE tco.constraint_type = 'PRIMARY KEY'
               AND tco.table_schema = 'esame'
         """)
-        print("\n## table name and primary keys\n")
-        print(tables_primry)
 
         # Foreign key
         tables_foreign=execute_query("""
@@ -77,10 +37,6 @@ def get_db_struct()->dict:
              AND rc.constraint_schema = kcu.constraint_schema
             WHERE rc.constraint_schema = 'esame'
         """)
-        print("\n## Foreign key\n")
-        print(tables_foreign)
-        print("\n\n\n")
-        
 
         # data organization
         db_structure = {}
@@ -107,27 +63,14 @@ def get_db_struct()->dict:
     except mariadb.Error as e:
         raise(f"Error while finding the database structure: {e}")
 
-# print function
-def print_db_structure(db_struct):
-    '''print of the database structure for us humans, its the base for stringify_structure'''
-    for table, info in db_struct.items():
-        print(f"table: {table}")
-        print(f"columns: {', '.join(info.get('columns', []))}")
-        primary_key = info.get('primary_key')
-        if primary_key:
-            print(f"primary key: {primary_key}")
-        foreign_key = info.get('foreign_keys', [])
-        if foreign_key:
-            print(f"  foreign key:")
-            for key in foreign_key:
-                print(f"- columns '{key['column']}' related to '{key['connected_table']}.{key['connected_column']}'")
-        print()  # space between prints
-
 def stringify_structure(db_struct)->str:
     '''transform the database structure into a string ready for the ai to read'''
-    string_to_ai=""
+    string_to_ai="The database have the folowing tables inside: "
+    for table in db_struct:
+        string_to_ai += f"{table}, "
+    string_to_ai += f"those tables are structured in the folowing way: "
     for table, info in db_struct.items():
-        string_to_ai+=f"this table name is: {table}, "
+        string_to_ai+=f"a table name is: {table}, "
         string_to_ai+=f"it has as columns: {', '.join(info.get('columns', []))}. "
         string_to_ai+=f"the primary key of this table is: {info.get('primary_key')}. "
         foreign_key = info.get('foreign_keys', [])
@@ -144,5 +87,3 @@ def ai_database_string()->str:
 if __name__== "__main__":
   struct=get_db_struct()
   stringForAi=stringify_structure(struct)
-  print("\n\n\n")
-  print(stringForAi)

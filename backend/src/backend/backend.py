@@ -1,17 +1,27 @@
 from contextlib import asynccontextmanager
 from io import StringIO
-from typing import Any, Callable, Dict
-from src.backend.add_request import add_from_row
-from src.backend.get_request import get_film_da_anno, get_film_da_eta_regista, get_film_da_genere,get_regista_da_piattaforma, get_registi_con_piu_film,schema_summary
-from src.backend.init_tables import init_tables
-from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException
+import requests
 from csv import DictReader
+from fastapi import FastAPI, HTTPException
 
+from src.backend.school import *
+from src.backend.mariadb_manager import execute_query
+from src.backend.add_request import add_from_row
+from src.backend.get_request import schema_summary
+from src.backend.init_tables import init_tables
+from src.backend.ai_support import * #controllare in quale file mettiamo l ia da importare qua
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):#preso dalla documentazione serve a inizializzare le tabelle del database
-    init_tables()
+async def lifespan(app: FastAPI):#taken by fastapi documentation, fill the tables with the starting elements
+    init_tables()#initialize the database
+    try:#download the ai model for the question in natural language
+        res=requests.post("http://ollama_esame:11434/api/pull", json={ "model": "gemma3:1b-it-qat" })
+        if (res.status_code != 200):
+            raise Exception("the download of the ai model was unsuccessful")    
+    except requests.exceptions.Timeout:
+        raise Exception("the download of the ai model went in timeout ")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"the download of the ai model was unsuccessful, here is the error:\n{e}")
     yield
 
 app=FastAPI(title="Film Questioner API",lifespan=lifespan)
@@ -30,44 +40,47 @@ def get_schema_summary():
     res=schema_summary()
     return res
 
-@app.get("/search/{question}")
-def search(question:str):
-    '''Rivela la domanda fatta grazie a un dizzionario che combina domanda (key) a funzione per la rispettiva domamda'''
-    
-    possible_question:Dict[str,Callable[[str],Any]]={
-        "Elenca i film del ":get_film_da_anno,
-        "Quali sono i registi presenti su ":get_regista_da_piattaforma,
-        "Elenca tutti i film di ":get_film_da_genere,
-        "Quali film sono stati fatti da un regista di almeno ":get_film_da_eta_regista,
-        "Quali registi hanno fatto più di":get_registi_con_piu_film
-    }
-    sql_output=-1
-    for que in possible_question:
-        if que in question:
-            question=question.replace(que,"")
-            sql_output=possible_question[que](question)#question.split()[0])
-         
-    if sql_output==-1:#La richiesta non faceva parte di quelle eseguibili
-        raise HTTPException(status_code=422, detail=f"La richiesta fatta \"{question}\" non è supportata")
-    if isinstance(sql_output,str):
-        raise HTTPException(status_code=400, detail=sql_output)
-    return sql_output
 
-class AddPayload(BaseModel):
-    data_line:str
-class AddValidation(BaseModel):
-    status:str
+
+@app.post("/search")#we need to use post
+def search(question:SearchPayload)->ResultMacro:
+    '''Take in input the question in natural language and return data from the database '''
+    ai_sql=question_to_sql(question.question)
+    sql=clean_ai(ai_sql) 
+    sql_output= None
+    validation=check_validation(sql)
+    if validation=="valid":
+        sql_output=execute_query(sql)
+    
+    data_type="film"
+
+    search_result=result_builder(sql=ai_sql, vali=validation, sql_output=sql_output, request_type=data_type )
+
+    return search_result
+
+@app.post("/sql_search")
+def sql_search(question:SqlSearchPayload)->ResultSqlSearch:
+    '''Take in input the question in natural language and return data from the database '''
+    sql=question.sql_query
+    validation=check_validation(sql)
+    if validation=="valid":
+        sql_output=execute_query(sql)
+        data_type="film"
+        result=result_micro_builder(sql_output=sql_output, type=data_type)
+        return ResultSqlSearch(sql_validation=validation,results=result)
+    return ResultSqlSearch(sql_validation=validation)
 
 
 @app.post("/add")
 def add(request:AddPayload):
     line=request.data_line
-    row = next(DictReader(StringIO(line), fieldnames=("Titolo",	"Regista", "Età_Autore", "Anno", "Genere", "Piattaforma_1", "Piattaforma_2")))
-    if None in row:#controlla se cisono chiavi col valore None
-        raise HTTPException(status_code=422, detail=f"La riga fornita per l'inserimento è troppo lunga")
+    row = next(DictReader(StringIO(line), fieldnames=("Titolo",	"Regista", "Età_Autore", "Anno", "Genere", "Piattaforma_1", "Piattaforma_2"))) #names taken from data.tsv
+    emptiness= any((value is None or value == '') and key not in ("Piattaforma_1", "Piattaforma_2")for key, value in row.items())
+    if emptiness or None in row.keys():#check if key or element is empty except "Piattaforma_2" and 1
+        raise HTTPException(status_code=422, detail=f"the input is wrong")
     out=add_from_row(row)
     if out != "ok":
-        raise HTTPException(status_code=422, detail=f"La richiesta di inserimento fatta non è conforme al modello richiesto:\n{out}")
+        raise HTTPException(status_code=422, detail=f"wrong input:\n{out}")
     res=AddValidation(status=out)
-    
     return res
+

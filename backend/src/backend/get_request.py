@@ -2,7 +2,7 @@ import re
 from typing import List, Tuple
 from pydantic import BaseModel
 from src.backend.mariadb_manager import execute_query
-
+#crea_res=class_maker get_film_da_anno=get_film_from_year get_regista_da_piattaforma=get_director_from_platform get_film_da_genere=get_film_from_genre
 class Proprieta(BaseModel):
     property_name:str
     property_value:str
@@ -16,106 +16,106 @@ class Schema(BaseModel):
 
 
 def clean_input(inp:str)->str:
-    '''ripulisce e corregge l'input per le querry sql'''
+    '''fixes input for query'''
     if "'" in inp:
-        inp=inp.replace("'","\\'")#controllo che impedisce di fare injection usando il carattere '
-    return re.sub(r'[,.?]', '', inp)#togle . , e ? non desiderati
+        inp=inp.replace("'","\\'")#prevents sql injections
+    return re.sub(r'[,.?]', '', inp)#removes . and ?
 
-def crea_res(lista:List[Tuple[str]], type:str)->Res:
-    '''funzione che crea il tipo di dato richiesto da jason per la comunicazione appartire del risultato delle querry sql'''
-    res:List[Res]=[] #TODO chiedere a prof se va bene, oppure devo mettere tutte le collonne in propriety name e se devo farlo manualmente o usando BaseModel (probabilmente la seconda)
-    for oggetto in lista:
-        lista_proprita:List[Proprieta]=[]
-        proprieta:Proprieta=Proprieta(property_name="name", property_value=oggetto[0])
-        lista_proprita.append(proprieta)
-        res.append(Res(item_type=type,properties=lista_proprita))
+def class_maker(input:List[Tuple[str]], type:str)->List[Res]:
+    '''makes the right data type for json from query'''
+    res:List[Res]=[] 
+    for item in input:
+        propertyList:List[Proprieta]=[]
+        proprieta:Proprieta=Proprieta(property_name="name", property_value=item[0])
+        propertyList.append(proprieta)
+        res.append(Res(item_type=type,properties=propertyList))
         
     return res
 
 
-def get_film_da_anno(anno:int)->Res:
-    '''seleziona tutti i film usciti in quel anno'''
-    anno=clean_input(anno)
+def get_film_from_year(year:int)->Res:
+    '''all film released in year'''
+    year=clean_input(year)
     try:
-        anno=int(anno)
+        year=int(year)
     except(ValueError):
-        return f"Non è possibile filtrare tramite anno dato che l'input inserito \"{anno}\"non è numerico"
-    lista_film=execute_query("SELECT titolo FROM movies WHERE anno=%d"%anno)
-    if lista_film==None:
-        return f"Errore nel recupero dei film dal anno \"{anno}\""
-    res:Res=crea_res(lista_film,"film")
+        return f"\"{year}\"is not a number"
+    list_film=execute_query("SELECT title FROM movies WHERE anno=%d"%year)
+    if list_film==None:
+        return f"error in finding film fron year \"{year}\""
+    res:Res=class_maker(list_film,"film")
     return res
 
-def get_regista_da_piattaforma(piattaforma:str)->Res:
-    '''seleziona tutti i registi disponibili in tale piattaforma'''
-    piattaforma=clean_input(piattaforma)
+def get_director_from_platform(platform:str)->Res:
+    '''find all directors from given platform'''
+    platform=clean_input(platform)
 
-    lista_registi=execute_query("SELECT DISTINCT Registi.regista From Registi JOIN movies ON Registi.regista=movies.regista JOIN Piattaforme ON Piattaforme.titolo=movies.titolo WHERE piattaforma_1='%s' OR piattaforma_2='%s'"%(piattaforma,piattaforma))
-    if lista_registi==None:
-        return f"Errore nel recupero dei registi dalla piattaforma \"{piattaforma}\""
-    res:Res=crea_res(lista_registi, "director")
+    director_list=execute_query("SELECT DISTINCT directors.director FROM directors JOIN movies ON directors.director=movies.director JOIN platforms ON platforms.titolo=movies.titolo WHERE platform1='%s' OR platform2='%s'"%(platform,platform))
+    if director_list==None:
+        return f"error in finding the directors from given platform \"{platform}\""
+    res:Res=class_maker(director_list, "director")
     return res
 
-def get_film_da_genere(genere:str)->Res:
+def get_film_from_genre(genre:str)->Res:
     '''seleziona tutti i film di tale genenre'''
-    genere=clean_input(genere)
+    genre=clean_input(genre)
 
-    lista_film=execute_query("SELECT titolo FROM movies WHERE genere='%s'"%genere)
-    if lista_film==None:
-        return f"Errore nel recupero dei film del genere \"{genere}\""
-    res:Res=crea_res(lista_film,"film")
+    list_film=execute_query("SELECT titolo FROM movies WHERE genre='%s'"%genre)
+    if list_film==None:
+        return f"error in finding film from the genre \"{genre}\""
+    res:Res=class_maker(list_film,"film")
     return res
 
-def get_film_da_eta_regista(eta_input:str)->Res:
-    '''seleziona tutti i film dove il regista a quel eta'''
-    eta=clean_input(eta_input)
-    eta=(re.search(r'\d+',eta))#recupera solo il valore numerico
+def get_film_with_director_age(age_input:str)->Res:
+    '''all film where the director is at least age years old'''
+    age=clean_input(age_input)
+    age=(re.search(r'\d+',age))#grabs the number
     try:
-        if not eta:
-            return f"Non è possibile filtrare tramite età dato che l'input inserito \"{eta_input}\" non ha un valore numerico"
-        eta=int(eta.group())
+        if not age:
+            return f"the input:\"{age_input}\" is not a number"
+        age=int(age.group())
     except(ValueError):
-        return f"Non è possibile filtrare tramite età dato che l'input inserito \"{eta_input}\" non ha un valore numerico"
+        return f"the input:\"{age_input}\" is not a number"
     
-    lista_film=execute_query("SELECT titolo FROM movies CROSS JOIN Registi ON movies.regista=Registi.regista WHERE eta>=%d" %eta)
-    if lista_film==None:
-        return f"Errore nel recupero dei film creati da autori con \"{eta}\" o superiore"
-    res:Res=crea_res(lista_film,"film")
+    list_film=execute_query("SELECT titolo FROM movies CROSS JOIN directors ON movies.director=directors.director WHERE age>=%d" %age)
+    if list_film==None:
+        return f"error in finding the film made by a director old at least \"{age}\" years"
+    res:Res=class_maker(list_film,"film")
     return res
 
-def get_registi_con_piu_film(num_film:str)->Res:
-    '''seleziona tutti i registi con più di un film o se specificato più di un numero (numerico)'''
+def get_director_with_more_film(num_film:str)->Res:
+    '''select all director with more then num_film film'''
     num_clean=clean_input(num_film)
-    num=(re.search(r'\d+',num_clean))#recupera solo il valore numerico
+    num=(re.search(r'\d+',num_clean))#grabs the number in the request
     if num:
         num=int(num.group())
-        lista_registi=execute_query("SELECT regista FROM movies GROUP BY regista HAVING COUNT(regista)>%d ;"%num)
-        if lista_registi==None:
-            return f"Errore nel recupero dei registi con più di {num} film"
+        director_list=execute_query("SELECT director FROM movies GROUP BY director HAVING COUNT(director)>%d ;"%num)
+        if director_list==None:
+            return f"error in finding director with more then {num} film"
     else:
-        lista_registi=execute_query("SELECT regista FROM movies GROUP BY regista HAVING COUNT(regista)>1 ;")
-        if lista_registi==None:
-            return f"Errore nel recupero dei registi con più di un film"
+        director_list=execute_query("SELECT director FROM movies GROUP BY director HAVING COUNT(director)>1 ;")
+        if director_list==None:
+            return f"error in finding the directors with more then a film"
     
-    res:Res=crea_res(lista_registi, "director")
+    res:Res=class_maker(director_list, "director")
     return res
 
-def get_collone_tabella(tabella:str)->List[Tuple]:
-    '''Restituisce una lista di tutte le collonne della tabbella chiesta'''
-    res= execute_query("SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='esonero' AND `TABLE_NAME`='%s';"%tabella)
+def get_all_columns(tabella:str)->List[Tuple]:
+    '''returns list of all columns in tab'''
+    res= execute_query("SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='esame' AND `TABLE_NAME`='%s';"%tabella)
     if res==None:
-        return f"Errore nel recupero delle collone della tabella \"{tabella}\""
+        return f"error in grabbing the columns in the table \"{tabella}\""
     return res
 
 def schema_summary()->List[Schema]:
-        '''Restituisce lo schema delle varie tabelle'''
+        '''return the schema of the tables'''
         res:List[Schema]=[]
         tabelle=execute_query("SHOW TABLES")
-        for tab in tabelle:#tab sta per tabella ma per non confondere i due per una lettera di differenza 
-            nome_tabella=tab[0]
-            colonne=execute_query("SHOW COLUMNS FROM %s" % nome_tabella)
-            for col in colonne:
-                nome_collonna=col[0]
-                agg=Schema(table_name=nome_tabella,table_column=nome_collonna)
+        for tab in tabelle: 
+            name_table=tab[0]
+            columns=execute_query("SHOW COLUMNS FROM %s" % name_table)
+            for col in columns:
+                name_column=col[0]
+                agg=Schema(table_name=name_table, table_column=name_column)
                 res.append(agg)
         return res

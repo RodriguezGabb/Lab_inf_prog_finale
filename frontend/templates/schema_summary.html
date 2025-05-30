@@ -56,14 +56,14 @@
             {%endfor%}
         </table>
 
-        <table class="table Registi">
+        <table class="table directors">
             <tr>
-            <th>Registi</th>
+            <th>directors</th>
             </tr>
 
             {% for item in schema_summary %}    
             <tr>
-                {% if 'Registi' == item.table_name%}
+                {% if 'directors' == item.table_name%}
                     <td>
                         {{item.table_column}}
                     </td>
@@ -72,14 +72,30 @@
             {%endfor%}
         </table>
 
-        <table class="table Piattaforme">
+        <table class="table relation_platform_film">
             <tr>
-            <th>Piattaforme</th>
+            <th>relation_platform_film</th>
             </tr>
 
             {% for item in schema_summary %}    
             <tr>
-                {% if 'Piattaforme' == item.table_name%}
+                {% if 'relation_platform_film' == item.table_name%}
+                    <td>
+                        {{item.table_column}}
+                    </td>
+                {%endif%}
+            </tr>
+            {%endfor%}
+        </table>
+
+        <table class="table platform">
+            <tr>
+            <th>platform</th>
+            </tr>
+
+            {% for item in schema_summary %}    
+            <tr>
+                {% if 'platform' == item.table_name%}
                     <td>
                         {{item.table_column}}
                     </td>

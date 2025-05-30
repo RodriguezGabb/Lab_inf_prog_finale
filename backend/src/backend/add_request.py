@@ -1,51 +1,53 @@
 from typing import Dict, List, Tuple
-from src.backend.mariadb_manager import execute_inserimento
+from src.backend.mariadb_manager import execute_insert
 
+def add_entry_to_movies(title:str, release_year:int, director:str, genre:str)->List[Tuple]:
+    '''fill a line into movies table'''
+    return execute_insert("INSERT INTO movies (titolo, anno, director, genre) VALUES (%s, %d, %s, %s) ON DUPLICATE KEY UPDATE anno=VALUES(anno), director = VALUES(director), genre = VALUES(genre);", (title, release_year, director, genre))
 
-def add_entry_to_movies(titolo:str, anno:int, regista:str, genere:str)->List[Tuple]:
-    '''inserisce una nuova riga alla tabella film'''
-    return execute_inserimento("INSERT INTO movies (titolo, anno, regista, genere) VALUES (%s, %d, %s, %s) ON DUPLICATE KEY UPDATE anno=VALUES(anno), regista = VALUES(regista), genere = VALUES(genere);", (titolo, anno, regista, genere))
+def add_entry_to_directors(director:str, age:int)->List[Tuple]:
+    '''insert a line into directors table'''
+    return execute_insert("INSERT INTO directors (director, age) VALUES (%s, %d) ON DUPLICATE KEY UPDATE age = VALUES(age);", (director, age))
 
-def add_entry_to_registi(regista:str, eta:int)->List[Tuple]:
-    '''inserisce una nuova riga alla tabella registi'''
-    return execute_inserimento("INSERT INTO Registi (regista, eta) VALUES (%s, %d) ON DUPLICATE KEY UPDATE eta = VALUES(eta);", (regista, eta))
-
-def add_entry_to_piattaforme(titolo: str, piattaforma_1:str,piattaforma_2:str=None)->List[Tuple]:
-    '''inserisce una nuova riga alla tabella piattaforme'''
-    if piattaforma_2: 
-        return execute_inserimento("INSERT INTO Piattaforme (titolo, piattaforma_1, piattaforma_2) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE piattaforma_1 = VALUES(piattaforma_1), piattaforma_2 = VALUES(piattaforma_2);", (titolo, piattaforma_1, piattaforma_2))
-    else:
-        return execute_inserimento("INSERT INTO Piattaforme (titolo, piattaforma_1) VALUES (%s, %s) ON DUPLICATE KEY UPDATE piattaforma_1 = VALUES(piattaforma_1);", (titolo, piattaforma_1))
+def add_entry_to_platforms(title: str, platform1:str=None,platform2:str=None)->List[Tuple]:
+    '''insert a line into relation_platform_film table'''
+    if platform1:
+        execute_insert("INSERT IGNORE INTO platform (platform_name) VALUES (%s)",(platform1,))
+    if platform2:
+        execute_insert("INSERT IGNORE INTO platform (platform_name) VALUES (%s)",(platform2,)) 
+    
+    return execute_insert("INSERT INTO relation_platform_film (titolo, platform1, platform2) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE platform1 = VALUES(platform1), platform2 = VALUES(platform2);", (title, platform1, platform2))
 
 def add_from_row(row:Dict[str,str])->str:
-    '''Aggiunge dati nel database a partire da un idizzionario sta composta nel seguente modo:
+    '''insert data into the database from dictionary made as such:
     row:Dict[str,str]={"Titolo":str,"Regista":str,"Età_Autore":str,"Anno":str, "Genere":str, "Piattaforma_1":str, "Piattaforma_2":str}
+    those name depends from data.tsv
     '''
-    for i in row:
-        if not isinstance(row.get(i), str):
-            return f"Il valore di {i} non è una stringa valida"
         
-    titolo = row.get("Titolo")
-    regista = row.get("Regista")
+    title = row.get("Titolo")
+    director = row.get("Regista")
     try:
-        eta = int(row.get("Età_Autore"))
+        age = int(row.get("Età_Autore"))
     except ValueError:
-        return "Il valore dato per l'età del regista non è numerio" 
+        return "the age given is not a number" 
     try:
-        anno = int(row.get("Anno"))
+        release_year = int(row.get("Anno"))
     except ValueError:
-        return "Il valore di Anno non è numerio"
+        return "the release year is not a number"
     
-    genere = row.get("Genere")
-    piat_1= row.get("Piattaforma_1")
-    piat_2 = row.get("Piattaforma_2")
+    genre = row.get("Genere")
+    platform1= row.get("Piattaforma_1")
+    platform2 = row.get("Piattaforma_2")
     
-    
-
-    add_entry_to_registi(regista,eta)
-    add_entry_to_movies(titolo,anno,regista,genere)
-    if piat_2: 
-        add_entry_to_piattaforme(titolo,piat_1,piat_2)
-    else:
-        add_entry_to_piattaforme(titolo,piat_1)
+    add_entry_to_directors(director,age)
+    add_entry_to_movies(title,release_year,director,genre)
+    #this if else section serve to insert every possible combination of platform in the database
+    if platform1 and platform2:
+        add_entry_to_platforms(title,platform1,platform2)
+    elif platform1:
+        add_entry_to_platforms(title,platform1=platform1)
+    elif platform2:
+        add_entry_to_platforms(title,platform2=platform2)
+    else: 
+        add_entry_to_platforms(title)
     return "ok"

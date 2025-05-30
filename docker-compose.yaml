@@ -19,8 +19,28 @@ services:
     networks:
       - mariadb_network
     
-  
-  
+  ollama_esame:
+    image: ollama/ollama
+    build:
+    #this is a solution found on github to download curl inside the container
+    #github link https://github.com/ollama/ollama/issues/5389
+      dockerfile_inline: | 
+        FROM ollama/ollama
+        RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
+    container_name: ollama_esame
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mariadb_network
+
+
   server_esame:
     build: ./backend
     ports: 
@@ -29,22 +49,29 @@ services:
     depends_on:
       mariadb_esame:
         condition: service_healthy
+      ollama_esame:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"] #preso dalla documentazione di health check
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"] #taken from documentation of dockercompose
       interval: 15s
       timeout: 30s
       retries: 5
     networks:
       - mariadb_network
 
-  cilent_esame:
+  client_esame:
     build: ./frontend
     ports:
       - "8001:8001"
-    container_name: cilent_esame
+    container_name: client_esame
     depends_on:
       server_esame:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001"] #preso dalla documentazione di health check
+      interval: 15s
+      timeout: 30s
+      retries: 5
     networks:
       - mariadb_network
 
@@ -53,6 +80,5 @@ services:
 networks:
   mariadb_network:
     driver: bridge
-
 
   

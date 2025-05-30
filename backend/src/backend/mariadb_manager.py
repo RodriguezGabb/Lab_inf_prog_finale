@@ -2,48 +2,48 @@ from typing import Any, List, Tuple
 import mariadb
 
 def connect() -> mariadb.Connection:
-    '''inizializza conessione con la piattaforma di mariadb con il user "film_user" e ritorna la conessione'''
+    '''starts the connection with mariadb with user "film_user"'''
     try:
         conn = mariadb.connect(
-            host="mariadb_esonero",
+            host="mariadb_esame",
             port=3306,
             user="film_user",
             password="filmpassword",
-            database="esonero"
+            database="esame"
         )
     except mariadb.Error as e:
-        raise Exception(f"Errore nella connessione con la piattaforma di maria db: {e}")
+        raise Exception(f"error in the connection with mariadb: {e}")
     return conn
 
 def execute_query(query: str) -> List[Tuple]:
-    '''esegue la querie che gli arriva in input con gli attributi forniti, e restituisce un output'''
+    '''execute query, return the output'''
     connection: mariadb.Connection = connect()
     cursor : mariadb.Cursor=connection.cursor()
     try:
         cursor.execute(query)
     except mariadb.Error as e:
-        raise Exception(f"Errore nel escuzuine della query {query}:\n {e}")
+        raise Exception(f"Error in the execution of the following query:\n {query}\n the error message is:\n {e}")
     try:
         results: Any = cursor.fetchall()
     except mariadb.Error as e:
-        raise Exception(f"Errore nel recupero del output della query {query}:\n {e}")
-    
+        raise Exception(f"Error in the return of the following query: {query}\n the error message is:\n:\n {e}")
+
     connection.commit()
     cursor.close()
     connection.close()
     return results
 
-def execute_inserimento(query: str,attributi: Tuple) -> str:
-    '''esegue l'inserimento che gli arriva in input con gli attributi forniti'''
+def execute_insert(query: str,attribute: Tuple) -> str:
+    '''insert data into tables'''
     connection: mariadb.Connection = connect()
     cursor : mariadb.Cursor=connection.cursor()
     try:
-        cursor.execute(query,attributi)
+        cursor.execute(query,attribute)
     except mariadb.Error as e:
-        return f"Errore nel escuzuine del inseriment {query}:\n {e}"
+        return f"error in the execution of the insert: {query}:\n {e}"
     connection.commit()
     cursor.close()
     connection.close()
-    return "ok"
+    return 'ok'
 
 

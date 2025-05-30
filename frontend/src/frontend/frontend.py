@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 import requests
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -5,9 +6,9 @@ from fastapi.templating import Jinja2Templates
 import os
 
 app= FastAPI()
-path_cartella_corrente = os.path.dirname(os.path.abspath(__file__))
-path_cartella_src=os.path.dirname(os.path.dirname(path_cartella_corrente))
-path=os.path.join(path_cartella_src, 'templates')
+path_folder = os.path.dirname(os.path.abspath(__file__))
+path_folder_src=os.path.dirname(os.path.dirname(path_folder))
+path=os.path.join(path_folder_src, 'templates')
 templates=Jinja2Templates(directory=path)
 SERVICE_SERVER_URL="http://server_esame:8003"
 
@@ -17,7 +18,7 @@ def get_response(url:str)->requests.models.Response:
         response.raise_for_status()
         response=response.json()
     except requests.RequestException as e:
-            raise HTTPException(status_code=500, detail=f"Errore di comunicazione con l'API al link {SERVICE_SERVER_URL}/{url}\nErrore:{e}")
+            raise HTTPException(status_code=500, detail=f"error with the comunication with the api at the link {SERVICE_SERVER_URL}/{url}\nError:{e}")
     return response
 
 @app.get("/")
@@ -32,27 +33,29 @@ def schema_summary(request:Request):
 
 @app.post("/search")
 async def search(request:Request, data_line:str =Form(default=...)):
+    '''search to ai'''
     try:
-        payload={"data_line":data_line}
+        payload={"question":data_line}
         response=requests.post(f"{SERVICE_SERVER_URL}/search", json=payload)
         response.raise_for_status()
-        messaggio=response.json()
+        message=response.json()
     except requests.RequestException as e:
-        try:#provo a prendere il messaggio di errore del backend
-            error = e.response.json()
-            # in caso l'errore sia una str
-            if isinstance(error.get("detail"), str):
-                messaggio = error["detail"]
-            elif isinstance(error.get("detail"), list):
-            # in caso l'errore sia una list
-                messaggio = "; ".join(str(item) for item in error["detail"])
-        except Exception:
-            messaggio = f"Errore di comunicazione con l'API al link {SERVICE_SERVER_URL}/search \n con la domanda {data_line}\nErrore:{e}"
-    
-    if not isinstance(messaggio, list):
-        messaggio=[{"item_type":"error", 'properties': messaggio}]#passo l'errore in modo tale che jinja2 possa leggerlo
-    return templates.TemplateResponse("search.html",{"request":request, "result":messaggio})
+        message = f"error with the comunication with API at the link {SERVICE_SERVER_URL}/search \n with question {data_line}\nError:{e}"
+    if not isinstance(message, dict):
+        message=[{"item_type":"error", 'properties': message}]#error in a way that jinja can read it
+    return templates.TemplateResponse("search.html",{"request":request, "result":message})
 
+@app.post("/sql_search")
+async def sql_search(request:Request, data_line:str =Form(default=...)):
+    '''search sql'''
+    try:
+        payload={"sql_query":data_line}
+        response=requests.post(f"{SERVICE_SERVER_URL}/sql_search", json=payload)
+        response.raise_for_status()
+        message=response.json()
+    except requests.RequestException as e:
+        message = f"error with the comunication with API at the link {SERVICE_SERVER_URL}/search \n with the folowing querry {data_line}\nError:{e}"
+    return templates.TemplateResponse("sql_search.html",{"request":request, "result":message})
 
 @app.post("/add")
 async def add(request:Request, data_line:str =Form(default=...)):
@@ -64,18 +67,18 @@ async def add(request:Request, data_line:str =Form(default=...)):
         add_result={"status":"success","data":result}
 
     except requests.exceptions.HTTPError as e:
-        messaggio = "Errore sconosciuto"
-        try:#provo a prendere il messaggio di errore del backend
+        message = "unknown error"
+        try:# try to get the error message from the backend
             error = e.response.json()
-            # in caso l'errore sia una str
+            # if error is a str
             if isinstance(error.get("detail"), str):
-                messaggio = error["detail"]
+                message = error["detail"]
             elif isinstance(error.get("detail"), list):
-                # in caso l'errore sia una list
-                messaggio = "; ".join(str(item) for item in error["detail"])
+                # if error is a list
+                message = "; ".join(str(item) for item in error["detail"])
         except Exception:
-            messaggio = str(e)
-        add_result = {"status": "error", "message": messaggio}
+            message = str(e)
+        add_result = {"status": "error", "message": message}
     except Exception as e:
         add_result = {"status": "error", "message": str(e)}
     return templates.TemplateResponse("add.html", {"request": request, "result": add_result})

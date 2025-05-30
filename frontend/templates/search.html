@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Risultati ricerca</title>
+    <title>research result</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,29 +21,24 @@
     </style>
 </head>
 <body>
-    {% if result is not defined or result|length == 0 %}
-    <h1>Spiacente ma non risultano dati per la tua richiesta</h1>
-    {% elif result[0].item_type == 'error' %}
-        <h1>Errore</h1>
-        <div>
-            <p>Errore durante la ricerca ecco le specifiche del errore</p>
-            <p>{{result[0].properties}}</p>
-        </div>
-    {% else %}
-    <h1>Risultati</h1>
-    <div>
-        <p>ecco la lista dei {{result[0].item_type}} richiesti:</p>
-        <ul>
-            {% for item in result %}
+    <h1>Search result</h1>
+    <h2>sql query</h2>
+    <p>{{result.sql}}</p>
+    <h2>this query is {{result.sql_validation}} </h2>
+    {% if result.sql_validation == 'valid' and result.results|length >0 %}
+    <ul>
+            {% for item in result.results %}
             <li>
                 {{item.properties[0].property_value}}
             </li>
             {% endfor%} 
         </ul>
-    </div>
-    {% endif %}
+    {% else %}
+    <p>There is no output to show</p>
+    {%endif%}
+    
 
-    <a href="/" class="back-btn">Torna alla home</a>
+    <a href="/" class="back-btn">return to home</a>
 </body>
 </html>
 
