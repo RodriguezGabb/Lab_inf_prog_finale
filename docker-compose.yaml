@@ -1,4 +1,3 @@
-
 services:
   mariadb_esame:
     image: mariadb:11.7.2-ubi9
@@ -9,22 +8,22 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - ./mariadb_data:/var/lib/mysql  # Mappatura del volume persistente
-      - ./mariadb_init:/docker-entrypoint-initdb.d  # Cartella per script SQL iniziali
+      - ./mariadb_data:/var/lib/mysql
+      - ./mariadb_init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=rootpassword"] 
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=rootpassword" ]
       interval: 15s
       timeout: 30s
       retries: 5
     networks:
       - mariadb_network
-    
+
   ollama_esame:
     image: ollama/ollama
     build:
-    #this is a solution found on github to download curl inside the container
-    #github link https://github.com/ollama/ollama/issues/5389
-      dockerfile_inline: | 
+      #this is a solution found on github to download curl inside the container
+      #github link https://github.com/ollama/ollama/issues/5389
+      dockerfile_inline: |
         FROM ollama/ollama
         RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
     container_name: ollama_esame
@@ -33,18 +32,17 @@ services:
     volumes:
       - ./ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:11434 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:11434 || exit 1" ]
       interval: 15s
       timeout: 10s
       retries: 5
     networks:
       - mariadb_network
 
-
   server_esame:
     build: ./backend
-    ports: 
-     - "8003:8003"
+    ports:
+      - "8003:8003"
     container_name: server_esame
     depends_on:
       mariadb_esame:
@@ -52,7 +50,7 @@ services:
       ollama_esame:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"] #taken from documentation of dockercompose
+      test: [ "CMD", "curl", "-f", "http://localhost:8003/health" ] #taken from documentation of dockercompose
       interval: 15s
       timeout: 30s
       retries: 5
@@ -68,17 +66,13 @@ services:
       server_esame:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001"] #preso dalla documentazione di health check
+      test: [ "CMD", "curl", "-f", "http://localhost:8001" ]
       interval: 15s
       timeout: 30s
       retries: 5
     networks:
       - mariadb_network
 
-
-
 networks:
   mariadb_network:
     driver: bridge
-
-  

@@ -23,11 +23,11 @@ def clean_ai(input:str)->str:
     commands = ['select','insert', 'update', 'delete', 'drop', 'alter', 'create', 'truncate', 'replace', 'grant', 'revoke', 'show', 'describe', 'explain']
     return SQLinator(input,commands)
 
-def question_to_sql(prompt:str)->str:#TODO mettere anche il modello poi lo dobbiamo fissare ma se ci avvanza tempo facciamolo 
+def question_to_sql(prompt:str, model:str="gemma3:1b-it-qat")->str: 
     '''this transform the question from the user into a sql query '''
     res=requests.post("http://ollama_esame:11434/api/chat",json={
-        "model": "gemma3:1b-it-qat",
-        "messages": [{ "role": "user", "content": prompt + "(answer only with a sql query for the following database without explanation or comments in the code. select only one column at the time.)"+ ai_database_string()}],
+        "model": model,
+        "messages": [{ "role": "user", "content": prompt + "(answer only with a sql query for the following database without explanation or comments in the code. select only one column at the time.terminate each row with ;)"+ ai_database_string()}],
         "stream": False
     })
     return res.json().get("message").get("content")

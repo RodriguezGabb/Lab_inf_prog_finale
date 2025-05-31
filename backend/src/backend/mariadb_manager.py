@@ -45,5 +45,3 @@ def execute_insert(query: str,attribute: Tuple) -> str:
     cursor.close()
     connection.close()
     return 'ok'
-
-

@@ -36,6 +36,11 @@ class ResultSqlSearch(BaseModel):
     sql_validation:str
     results:List[ResultMicro] = None
 
+class Schema(BaseModel):
+    table_name:str
+    table_column:str
+
+
 #builders
 
 def result_macro_builder(sql_input:str,vali:str,MicroList:list[ResultMicro])->ResultMacro:

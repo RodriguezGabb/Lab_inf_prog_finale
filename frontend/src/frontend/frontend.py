@@ -1,5 +1,3 @@
-from typing import List
-from pydantic import BaseModel
 import requests
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.templating import Jinja2Templates
@@ -41,8 +39,7 @@ async def search(request:Request, data_line:str =Form(default=...)):
         message=response.json()
     except requests.RequestException as e:
         message = f"error with the comunication with API at the link {SERVICE_SERVER_URL}/search \n with question {data_line}\nError:{e}"
-    if not isinstance(message, dict):
-        message=[{"item_type":"error", 'properties': message}]#error in a way that jinja can read it
+        raise(message)
     return templates.TemplateResponse("search.html",{"request":request, "result":message})
 
 @app.post("/sql_search")
@@ -54,7 +51,8 @@ async def sql_search(request:Request, data_line:str =Form(default=...)):
         response.raise_for_status()
         message=response.json()
     except requests.RequestException as e:
-        message = f"error with the comunication with API at the link {SERVICE_SERVER_URL}/search \n with the folowing querry {data_line}\nError:{e}"
+        message = f"error with the comunication with API at the link {SERVICE_SERVER_URL}/sql_search \n with the folowing querry {data_line}\nError:{e}"
+        raise(message)
     return templates.TemplateResponse("sql_search.html",{"request":request, "result":message})
 
 @app.post("/add")

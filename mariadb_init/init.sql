@@ -1,10 +1,10 @@
---creazione del user e del database 
+--creation of the database and the user 
 CREATE USER IF NOT EXISTS 'film_user'@'localhost' IDENTIFIED BY 'filmpassword';
 CREATE DATABASE IF NOT EXISTS esame;
 GRANT ALL PRIVILEGES ON esame.* TO 'film_user'@'%' IDENTIFIED BY 'filmpassword';
 USE esame;
 
---creo prima perché è foreign key
+
 CREATE TABLE IF NOT EXISTS directors( 
     director VARCHAR(255) NOT NULL,
     age INT NOT NULL,
@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS movies(
     genre VARCHAR(255) NOT NULL,
     PRIMARY KEY (titolo),
     FOREIGN KEY (director) REFERENCES directors(director),
-    CONSTRAINT UC_film UNIQUE (titolo, anno, director),/*non può uscire lo stesso film nello stesso anno dallo stesso regista*/
-    CONSTRAINT UC_film2 UNIQUE (titolo, anno)/*non può uscire lo stesso film nello stesso anno*/
+    CONSTRAINT UC_film UNIQUE (titolo, anno, director),
+    CONSTRAINT UC_film2 UNIQUE (titolo, anno)
 );
 
 

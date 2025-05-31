@@ -9,10 +9,11 @@ from src.backend.mariadb_manager import execute_query
 from src.backend.add_request import add_from_row
 from src.backend.get_request import schema_summary
 from src.backend.init_tables import init_tables
-from src.backend.ai_support import * #controllare in quale file mettiamo l ia da importare qua
+from src.backend.ai_support import * 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):#taken by fastapi documentation, fill the tables with the starting elements
+async def lifespan(app: FastAPI):
+    ''''taken by fastapi documentation, will set up the  tables with the starting elements and download gemma3:1b-it-qat as model for ollama'''
     init_tables()#initialize the database
     try:#download the ai model for the question in natural language
         res=requests.post("http://ollama_esame:11434/api/pull", json={ "model": "gemma3:1b-it-qat" })
@@ -42,7 +43,7 @@ def get_schema_summary():
 
 
 
-@app.post("/search")#we need to use post
+@app.post("/search")
 def search(question:SearchPayload)->ResultMacro:
     '''Take in input the question in natural language and return data from the database '''
     ai_sql=question_to_sql(question.question)
@@ -60,7 +61,7 @@ def search(question:SearchPayload)->ResultMacro:
 
 @app.post("/sql_search")
 def sql_search(question:SqlSearchPayload)->ResultSqlSearch:
-    '''Take in input the question in natural language and return data from the database '''
+    '''Take in input a sql query and return data from the databse '''
     sql=question.sql_query
     validation=check_validation(sql)
     if validation=="valid":
@@ -73,6 +74,7 @@ def sql_search(question:SqlSearchPayload)->ResultSqlSearch:
 
 @app.post("/add")
 def add(request:AddPayload):
+    '''Take in input a csv string and add the data to the databse '''
     line=request.data_line
     row = next(DictReader(StringIO(line), fieldnames=("Titolo",	"Regista", "Età_Autore", "Anno", "Genere", "Piattaforma_1", "Piattaforma_2"))) #names taken from data.tsv
     emptiness= any((value is None or value == '') and key not in ("Piattaforma_1", "Piattaforma_2")for key, value in row.items())

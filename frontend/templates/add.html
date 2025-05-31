@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <title>table updated successfully</title>
@@ -9,14 +10,17 @@
             margin: 40px;
             background-color: #577590;
         }
+
         .success {
             color: #8ddf90;
             font-size: 1.2em;
         }
-        .unsuccess{
+
+        .unsuccess {
             color: #da7373;
             font-size: 1.2em;
         }
+
         .back-btn {
             display: inline-block;
             margin-top: 20px;
@@ -28,6 +32,7 @@
         }
     </style>
 </head>
+
 <body>
     {% if result.status == 'success' %}
     <h1 class="success">Operazione completata</h1>
@@ -35,12 +40,12 @@
     {% elif result.status == 'error' %}
     <h1 class="unsuccess"> Operazione Fallita</h1>
     <p>Errore:</p>
-    <div >
+    <div>
         {{ result.message }}
     </div>
     {% endif %}
     <a href="/" class="back-btn">Torna alla home</a>
-    
+
 </body>
+
 </html>
-<!-- The Green Mile,Frank Darabont,65,1999,Drama,Netflix, -->   

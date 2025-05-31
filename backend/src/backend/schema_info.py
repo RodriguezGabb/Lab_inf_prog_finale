@@ -1,5 +1,4 @@
 import mariadb
-from typing import Any, List, Tuple
 from src.backend.mariadb_manager import execute_query
 def get_db_struct()->dict:
     '''retuns database structure for ai'''
@@ -38,7 +37,7 @@ def get_db_struct()->dict:
             WHERE rc.constraint_schema = 'esame'
         """)
 
-        # data organization
+        # dictionary for the data organization
         db_structure = {}
 
         # adding columns
